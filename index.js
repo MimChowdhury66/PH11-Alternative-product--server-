@@ -65,6 +65,13 @@ async function run() {
             res.send(result)
         })
 
+        app.delete('/queries/:id', async (req, res) => {
+            const result = await queryCollection.deleteOne({ _id: new ObjectId(req.params.id) })
+            console.log(result);
+            res.send(result)
+        })
+
+
 
         app.get('/queries', async (req, res) => {
             let query = req.query;
