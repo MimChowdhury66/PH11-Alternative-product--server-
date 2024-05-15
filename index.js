@@ -27,7 +27,7 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         const queryCollection = client.db('informatica').collection('queries');
-
+        const recommendationCollection = client.db('informatica').collection('recommendations');
 
 
 
@@ -36,6 +36,47 @@ async function run() {
             const result = await queryCollection.insertOne(req.body);
             res.send(result)
         })
+
+        app.post('/recommendation', async (req, res) => {
+            const data = req.body;
+            const recommendationData = {
+                queryId: data.queryId,
+                queryUserEmail: data.queryUserEmail,
+                queryUserName: data.queryUserName,
+                recommendedProductName: data.recommendedProductName,
+                recommendedProductImageURL: data.recommendedProductImageURL,
+                recommendationTitle: data.recommendationTitle,
+                recommendationReason: data.recommendationReason,
+                email: data.email,
+                displayName: data.displayName,
+                photoURL: data.photoURL,
+                postedTimestamp: new Date().toLocaleString("en-Us", {
+                    year: "numeric",
+                    month: "numeric",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: false
+                })
+
+            };
+            await recommendationCollection.insertOne(recommendationData);
+            await queryCollection.updateOne(
+                { _id: new ObjectId(data.queryId) },
+                { $inc: { recommmendationCount: 1 } }
+            );
+
+            res.send({ message: "Recommendation saved" })
+        })
+
+
+        app.get('/recommendation', async (req, res) => {
+            const result = await recommendationCollection.find().sort({ postedTimestamp: -1 }).toArray();
+            res.send(result)
+        })
+
+
         app.get('/queries/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
