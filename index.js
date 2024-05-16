@@ -71,11 +71,25 @@ async function run() {
         })
 
 
+
+
+
         app.get('/recommendation', async (req, res) => {
             const result = await recommendationCollection.find().sort({ postedTimestamp: -1 }).toArray();
             res.send(result)
         })
 
+        app.delete('/recommendation', async (req, res) => {
+            const id = req.query.id;
+            const queryId = req.query.queryId;
+            const query = { _id: new ObjectId(id) };
+            await recommendationCollection.deleteOne(query);
+            await queryCollection.updateOne(
+                { _id: new ObjectId(queryId) },
+                { $inc: { recommmendationCount: -1 } }
+            );
+            res.send({ message: 'delete recomendation successfully' })
+        })
 
         app.get('/queries/:id', async (req, res) => {
             const id = req.params.id;
